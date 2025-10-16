@@ -1,23 +1,20 @@
 package br.com.valueprojects.mock_spring.model;
 
-/**
- * Classe de dados para representar o vencedor de um jogo.
- */
 public class Vencedor {
 
-    private final Jogo jogo;
     private final Participante participante;
+    private final Jogo jogo;
 
-    public Vencedor(Jogo jogo, Participante participante) {
-        this.jogo = jogo;
+    public Vencedor(Participante participante, Jogo jogo) {
         this.participante = participante;
-    }
-
-    public Jogo getJogo() {
-        return jogo;
+        this.jogo = jogo;
     }
 
     public Participante getParticipante() {
         return participante;
+    }
+
+    public Jogo getJogo() {
+        return jogo;
     }
 }
