@@ -1,14 +1,8 @@
 package br.com.valueprojects.mock_spring;
 
-
-
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -17,76 +11,51 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import br.com.valueprojects.mock_spring.builder.CriadorDeJogo;
-import br.com.valueprojects.mock_spring.model.FinalizaJogo;
-import br.com.valueprojects.mock_spring.model.Jogo;
-import infra.JogoDao;
-
-
-
+import br.com.valueprojects.mock_spring.model.*;
+import infra.*;
 
 public class FinalizaJogoTest {
-	
-	 @Test
-	    public void deveFinalizarJogosDaSemanaAnterior() {
 
-	        Calendar antiga = Calendar.getInstance();
-	        antiga.set(1999, 1, 20);
+    @Test
+    public void deveFinalizarJogosDaSemanaAnterior() {
+        Calendar antiga = Calendar.getInstance();
+        antiga.set(1999, 1, 20);
+        Jogo jogo1 = new CriadorDeJogo().para("Caça moedas").naData(antiga).constroi();
+        Jogo jogo2 = new CriadorDeJogo().para("Derruba barreiras").naData(antiga).constroi();
+        List<Jogo> jogosAnteriores = Arrays.asList(jogo1, jogo2);
 
-	        Jogo jogo1 = new CriadorDeJogo().para("Ca�a moedas")
-	            .naData(antiga).constroi();
-	        Jogo jogo2 = new CriadorDeJogo().para("Derruba barreiras")
-	            .naData(antiga).constroi();
+        JogoDao daoFalso = mock(JogoDao.class);
+        VencedorDao vencedorDaoFalso = mock(VencedorDao.class);
+        MessageSender senderFalso = mock(MessageSender.class);
 
-	        // mock no lugar de dao falso
-	        
-	        List<Jogo> jogosAnteriores = Arrays.asList(jogo1, jogo2);
+        when(daoFalso.emAndamento()).thenReturn(jogosAnteriores);
 
-	        JogoDao daoFalso = mock(JogoDao.class);
+        FinalizaJogo finalizador = new FinalizaJogo(daoFalso, vencedorDaoFalso, senderFalso);
+        finalizador.finaliza();
 
-	        when(daoFalso.emAndamento()).thenReturn(jogosAnteriores);
+        assertTrue(jogo1.isFinalizado());
+        assertTrue(jogo2.isFinalizado());
+        assertEquals(2, finalizador.getTotalFinalizados());
+    }
 
-	        FinalizaJogo finalizador = new FinalizaJogo(daoFalso);
-	        finalizador.finaliza();
+    @Test
+    public void deveVerificarSeMetodoAtualizaFoiInvocado() {
+        Calendar antiga = Calendar.getInstance();
+        antiga.set(1999, 1, 20);
+        Jogo jogo1 = new CriadorDeJogo().para("Cata moedas").naData(antiga).constroi();
+        Jogo jogo2 = new CriadorDeJogo().para("Derruba barreiras").naData(antiga).constroi();
+        List<Jogo> jogosAnteriores = Arrays.asList(jogo1, jogo2);
 
-	        assertTrue(jogo1.isFinalizado());
-	        assertTrue(jogo2.isFinalizado());
-	        assertEquals(2, finalizador.getTotalFinalizados());
-	    }
-	 
-	 @Test
-		public void deveVerificarSeMetodoAtualizaFoiInvocado() {
+        JogoDao daoFalso = mock(JogoDao.class);
+        VencedorDao vencedorDaoFalso = mock(VencedorDao.class);
+        MessageSender senderFalso = mock(MessageSender.class);
 
-			Calendar antiga = Calendar.getInstance();
-			antiga.set(1999, 1, 20);
+        when(daoFalso.emAndamento()).thenReturn(jogosAnteriores);
 
-			Jogo jogo1 = new CriadorDeJogo().para("Cata moedas").naData(antiga).constroi();
-			Jogo jogo2 = new CriadorDeJogo().para("Derruba barreiras").naData(antiga).constroi();
+        FinalizaJogo finalizador = new FinalizaJogo(daoFalso, vencedorDaoFalso, senderFalso);
+        finalizador.finaliza();
 
-			// mock no lugar de dao falso
-
-			List<Jogo> jogosAnteriores = Arrays.asList(jogo1, jogo2);
-
-			JogoDao daoFalso = mock(JogoDao.class);
-
-			when(daoFalso.emAndamento()).thenReturn(jogosAnteriores);
-
-			FinalizaJogo finalizador = new FinalizaJogo(daoFalso);
-			finalizador.finaliza();
-
-			verify(daoFalso, times(1)).atualiza(jogo1);
-			//Mockito.verifyNoInteractions(daoFalso);
-	
-					
-			
-		}
-	 
-	 
-		 
-	}
-
- 
-
-	
-	
-
-	
+        verify(daoFalso, times(1)).atualiza(jogo1);
+        verify(daoFalso, times(1)).atualiza(jogo2);
+    }
+}
